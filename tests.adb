@@ -18,7 +18,7 @@ begin
    Assert(Deconvolve(Input_Image, Identity_Kernel, 1)(2,2) = 1.0, "Identity kernel failed to preserve input");
    Put_Line("   PASS");
 
-   -- TEST 2 - Iteration 0 (Logical edge case: Prompt allows positive, so check 1)
+   -- TEST 2 - Iteration Stability
    Put_Line("TEST 2 - Single Iteration Stability");
    Assert(Deconvolve(Input_Image, Identity_Kernel, 1)'Length(1) = 3, "Output dimension mismatch");
    Put_Line("   PASS");
@@ -68,7 +68,6 @@ begin
       Kernel : constant Matrix(1..3, 1..3) := (others => (others => 0.0));
       Res : Matrix := Deconvolve(Input_Image, Kernel, 1);
    begin
-      -- Should not crash, just produce artifacts or 0s
       Assert(True, "Function crashed during div-by-zero");
       Put_Line("   PASS");
    end;
@@ -99,7 +98,7 @@ begin
       Res : Matrix := Deconvolve(Input_Image, Identity_Kernel, 1);
       Val : Float := Res(1, 1);
    begin
-      Assert(Val >= 0.0, "Data type altered");
+      Assert(Val >= 0.0, "Data type error");
       Put_Line("   PASS");
    end;
 
@@ -109,30 +108,26 @@ begin
       Res1 : Matrix := Deconvolve(Input_Image, Identity_Kernel, 1);
       Res2 : Matrix := Deconvolve(Input_Image, Identity_Kernel, 5);
    begin
-      -- Should be same for identity
       Assert(Res1(2,2) = Res2(2,2), "Identity kernel produced different results at diff iterations");
       Put_Line("   PASS");
    end;
 
-   -- TEST 11 - Adjoint Convolution (Flip) Verification
+   -- TEST 11 - Adjoint Logic
    Put_Line("TEST 11 - Adjoint Operation Logic");
-   -- Handled by logic structure, verifying output is not all zeros
    Assert(Deconvolve(Input_Image, Identity_Kernel, 1)(2,2) /= 0.0, "Processing failed to yield non-zero output");
    Put_Line("   PASS");
 
    -- TEST 12 - Memory Bounds
    Put_Line("TEST 12 - Large Matrix Access Safety");
+   declare
+      Large : Matrix(1..50, 1..50) := (others => (others => 1.0));
+      Res : Matrix := Deconvolve(Large, Identity_Kernel, 1);
    begin
-      declare
-         Large : Matrix(1..50, 1..50) := (others => (others => 1.0));
-         Res : Matrix := Deconvolve(Large, Identity_Kernel, 1);
-      begin
-         Assert(Res(50,50) = 1.0, "Boundary access failed");
-      end;
+      Assert(Res(50,50) = 1.0, "Boundary access failed");
       Put_Line("   PASS");
    end;
 
-   -- TEST 13 - Adjoint Kernel Correctness
+   -- TEST 13 - Kernel Sizing Logic
    Put_Line("TEST 13 - Kernel Sizing Logic");
    declare
       PSF : constant Matrix(1..3, 1..3) := (
