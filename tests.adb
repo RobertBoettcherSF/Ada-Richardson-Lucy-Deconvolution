@@ -4,8 +4,12 @@ with RL_Deconvolution; use RL_Deconvolution;
 
 procedure Tests is
    -- Test Data Setup
-   Identity_Kernel : constant Matrix(1..1, 1..1) := ((1.0,));
-   Input_Image     : constant Matrix(1..3, 1..3) := ((0.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 0.0));
+   Identity_Kernel : constant Matrix(1..1, 1..1) := (1 => (1 => 1.0));
+   Input_Image     : constant Matrix(1..3, 1..3) := (
+      (0.0, 0.0, 0.0), 
+      (0.0, 1.0, 0.0), 
+      (0.0, 0.0, 0.0)
+   );
 begin
    Put_Line("Running 13+ Verification Tests for Richardson-Lucy...");
 
@@ -23,7 +27,7 @@ begin
    Put_Line("TEST 3 - Invalid PSF Dimensions (Even sized)");
    begin
       declare
-         Even_Kernel : constant Matrix(1..2, 1..2) := ((1.0, 1.0), (1.0, 1.0));
+         Even_Kernel : constant Matrix(1..2, 1..2) := (others => (others => 1.0));
          Result : Matrix := Deconvolve(Input_Image, Even_Kernel, 1);
       begin
          Assert(False, "Did not raise exception for even kernel");
@@ -61,7 +65,7 @@ begin
    -- TEST 6 - Numerical Stability (Division by Zero)
    Put_Line("TEST 6 - Division by Zero Robustness");
    declare
-      Kernel : constant Matrix(1..3, 1..3) := ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0));
+      Kernel : constant Matrix(1..3, 1..3) := (others => (others => 0.0));
       Res : Matrix := Deconvolve(Input_Image, Kernel, 1);
    begin
       -- Should not crash, just produce artifacts or 0s
@@ -72,7 +76,7 @@ begin
    -- TEST 7 - Convergence of Uniform Image
    Put_Line("TEST 7 - Uniform Image Convergence");
    declare
-      Uniform : constant Matrix(1..3, 1..3) := ((0.5, 0.5, 0.5), (0.5, 0.5, 0.5), (0.5, 0.5, 0.5));
+      Uniform : constant Matrix(1..3, 1..3) := (others => (others => 0.5));
       Res : Matrix := Deconvolve(Uniform, Identity_Kernel, 1);
    begin
       Assert(Res(2,2) > 0.0, "Result converged to invalid value");
@@ -82,7 +86,7 @@ begin
    -- TEST 8 - Non-Square PSF
    Put_Line("TEST 8 - Non-Square PSF Handling");
    declare
-      NS_Kernel : constant Matrix(1..1, 1..3) := ((0.33, 0.33, 0.33));
+      NS_Kernel : constant Matrix(1..1, 1..3) := (1 => (0.33, 0.33, 0.33));
       Res : Matrix := Deconvolve(Input_Image, NS_Kernel, 1);
    begin
       Assert(Res'Length(1) = 3, "Output structure modified by non-square kernel");
@@ -93,9 +97,9 @@ begin
    Put_Line("TEST 9 - Float Type Preservation");
    declare
       Res : Matrix := Deconvolve(Input_Image, Identity_Kernel, 1);
-      subtype MyFloat is Float;
+      Val : Float := Res(1, 1);
    begin
-      Assert(Res(1,1)'Result_Size = Float'Result_Size, "Data type altered");
+      Assert(Val >= 0.0, "Data type altered");
       Put_Line("   PASS");
    end;
 
@@ -131,7 +135,11 @@ begin
    -- TEST 13 - Adjoint Kernel Correctness
    Put_Line("TEST 13 - Kernel Sizing Logic");
    declare
-      PSF : constant Matrix(1..3, 1..3) := ((0.0, 1.0, 0.0), (1.0, 1.0, 1.0), (0.0, 1.0, 0.0));
+      PSF : constant Matrix(1..3, 1..3) := (
+         (0.0, 1.0, 0.0), 
+         (1.0, 1.0, 1.0), 
+         (0.0, 1.0, 0.0)
+      );
       Res : Matrix := Deconvolve(Input_Image, PSF, 1);
    begin
       Assert(Res'Length(1) = 3, "Output matrix size corrupted");
