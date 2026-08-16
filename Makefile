@@ -1,17 +1,14 @@
 .PHONY: all test clean
 
-GNAT = gnatmake
-OBJ_DIR = obj
-BIN_DIR = bin
+GNATMAKE = gnatmake
+PROJECT = rl.gpr
 
-all: $(BIN_DIR)/tests
+all:
+	$(GNATMAKE) -P $(PROJECT)
 
-$(BIN_DIR)/tests: tests.adb rl_deconv.adb rl_deconv.ads
-	mkdir -p $(OBJ_DIR) $(BIN_DIR)$(GNAT) -D $(OBJ_DIR) -o$(BIN_DIR)/tests tests.adb
-
-test: $(BIN_DIR)/tests
+test: all
 	@echo "Running verification tests..."
-	@$(BIN_DIR)/tests
+	@bin/tests
 
 clean:
-	rm -rf $(OBJ_DIR)/*$(BIN_DIR)/*
+	rm -rf obj/* bin/*
