@@ -1,6 +1,3 @@
--- rl_deconv.adb
-with Ada.Numerics;
-
 package body RL_Deconvolution is
 
    function Convolve (Input : Matrix; Kernel : Matrix) return Matrix is
@@ -12,7 +9,6 @@ package body RL_Deconvolution is
       Pad_R   : constant Integer := K_Rows / 2;
       Pad_C   : constant Integer := K_Cols / 2;
    begin
-      -- Standard 2D Convolution Logic
       for R in 1 .. Rows loop
          for C in 1 .. Cols loop
             for Kr in 1 .. K_Rows loop
@@ -40,10 +36,9 @@ package body RL_Deconvolution is
    ) return Matrix is
       Rows   : constant Integer := Observed'Length(1);
       Cols   : constant Integer := Observed'Length(2);
-      Est    : Matrix(1 .. Rows, 1 .. Cols) := (others => (others => 0.5)); -- Initial guess (uniform)
-      PSF_F  : Matrix(1 .. PSF'Length(1), 1 .. PSF'Length(2)); -- Flipped PSF
+      Est    : Matrix(1 .. Rows, 1 .. Cols) := (others => (others => 0.5));
+      PSF_F  : Matrix(1 .. PSF'Length(1), 1 .. PSF'Length(2));
       
-      -- Helper: Flip kernel for adjoint convolution
       procedure Flip_PSF is
       begin
          for R in 1 .. PSF'Length(1) loop
@@ -65,7 +60,6 @@ package body RL_Deconvolution is
             Blurred : constant Matrix := Convolve(Est, PSF);
             Ratio   : Matrix(1 .. Rows, 1 .. Cols);
          begin
-            -- Compute Ratio (Observed / Blurred)
             for R in 1 .. Rows loop
                for C in 1 .. Cols loop
                   if Blurred(R, C) = 0.0 then
@@ -76,7 +70,6 @@ package body RL_Deconvolution is
                end loop;
             end loop;
 
-            -- Apply Correction
             declare
                Correction : constant Matrix := Convolve(Ratio, PSF_F);
             begin
